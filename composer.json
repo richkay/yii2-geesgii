@@ -1,0 +1,35 @@
+{
+    "name": "richkay/yii2-geesgii",
+    "description": "The Gii extension for the Yii framework",
+    "keywords": ["yii2", "gii", "code generator"],
+    "type": "yii2-extension",
+    "license": "BSD-3-Clause",
+    "support": {
+        "issues": "https://github.com/richkay/yii2-geesgii/issues",
+        "source": "https://github.com/richkay/yii2-geesgii"
+    },
+    "authors": [
+        {
+            "name": "Rich Kay",
+            "email": "richkay71@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "yiisoft/yii2": ">=2.0.4",
+        "yiisoft/yii2-bootstrap": "~2.0",
+        "phpspec/php-diff": ">=1.0.2",
+        "bower-asset/typeahead.js": "0.10.* | ~0.11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "richkay\\geesgii\\": ""
+        }
+    },
+    "extra": {
+        "asset-installer-paths": {
+            "npm-asset-library": "vendor/npm",
+            "bower-asset-library": "vendor/bower"
+        }
+    }
+}
