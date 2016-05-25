@@ -43,13 +43,17 @@ class Generator extends \richkay\geesgii\Generator
      */
     public $enablePjax = false;
 
-
+	public function getId()
+    {
+        return 'crud';
+		//dont change this
+    }
     /**
      * @inheritdoc
      */
     public function getName()
     {
-        return 'CRUD Generator';
+        return 'Gees CRUD Generator';
     }
 
     /**

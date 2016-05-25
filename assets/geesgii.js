@@ -202,6 +202,7 @@ yii.gii = (function ($) {
             $('#model-generator #generator-tablename').on('blur', function () {
                 var tableName = $(this).val();
                 var tablePrefix = $(this).attr('table_prefix') || '';
+				
                 if (tablePrefix.length) {
                     // if starts with prefix
                     if (tableName.slice(0, tablePrefix.length) === tablePrefix) {
@@ -217,6 +218,7 @@ yii.gii = (function ($) {
                     });
                     $('#generator-modelclass').val(modelClass).blur();
                 }
+				
             });
 
             // model generator: translate model class to query class

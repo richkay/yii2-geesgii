@@ -32,6 +32,7 @@ use Yii;
  * @property <?= $relation[1] . ($relation[2] ? '[]' : '') . ' $' . lcfirst($name) . "\n" ?>
 <?php endforeach; ?>
 <?php endif; ?>
+
  */
 class <?= $className ?> extends <?= '\\' . ltrim($generator->baseClass, '\\') . "\n" ?>
 {
@@ -72,16 +73,7 @@ class <?= $className ?> extends <?= '\\' . ltrim($generator->baseClass, '\\') . 
 <?php endforeach; ?>
         ];
     }
-<?php foreach ($relations as $name => $relation): ?>
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function get<?= $name ?>()
-    {
-        <?= $relation[0] . "\n" ?>
-    }
-<?php endforeach; ?>
 <?php if ($queryClassName): ?>
 <?php
     $queryClassFullName = ($generator->ns === $generator->queryNs) ? $queryClassName : '\\' . $generator->queryNs . '\\' . $queryClassName;

@@ -2,7 +2,7 @@
 
 use yii\helpers\Html;
 use richkay\geesgii\CodeFile;
-
+use richkay\geesgii\generators\model\Generator;
 /* @var $this \yii\web\View */
 /* @var $generator \richkay\geesgii\Generator */
 /* @var $files CodeFile[] */
@@ -10,6 +10,7 @@ use richkay\geesgii\CodeFile;
 /* @var $id string panel ID */
 
 ?>
+
 <div class="default-view-files">
     <div id="action-toggle" class="btn-group btn-group-xs pull-right">
         <label class="btn btn-success active" title="Filter files that are created">
@@ -22,7 +23,7 @@ use richkay\geesgii\CodeFile;
             <input type="checkbox" value="<?= CodeFile::OP_OVERWRITE ?>" checked> Overwrite
         </label>
     </div>
-
+	
     <p>Click on the above <code>Generate</code> button to generate the files selected below:</p>
 
     <table class="table table-bordered table-striped table-condensed">

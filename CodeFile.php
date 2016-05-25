@@ -107,6 +107,12 @@ class CodeFile extends Object
             return $this->path;
         }
     }
+	
+	public function getContent()
+    {
+        return $this->content;
+
+    }
 
     /**
      * @return string the code file extension (e.g. php, txt)

@@ -42,14 +42,19 @@ class Generator extends \richkay\geesgii\Generator
     public $queryNs = 'app\models';
     public $queryClass;
     public $queryBaseClass = 'yii\db\ActiveQuery';
+	public $fkname;
 
-
+	public function getId()
+    {
+        return 'model';
+		//dont change this
+    }
     /**
      * @inheritdoc
      */
     public function getName()
     {
-        return 'Model Generator';
+        return 'Gees Model Generator';
     }
 
     /**
@@ -66,14 +71,15 @@ class Generator extends \richkay\geesgii\Generator
     public function rules()
     {
         return array_merge(parent::rules(), [
-            [['db', 'ns', 'tableName', 'modelClass', 'baseClass', 'queryNs', 'queryClass', 'queryBaseClass'], 'filter', 'filter' => 'trim'],
+            [['db', 'ns','tableName','modelClass', 'baseClass', 'queryNs', 'queryClass', 'queryBaseClass'], 'filter', 'filter' => 'trim'],
             [['ns', 'queryNs'], 'filter', 'filter' => function ($value) { return trim($value, '\\'); }],
 
             [['db', 'ns', 'tableName', 'baseClass', 'queryNs', 'queryBaseClass'], 'required'],
             [['db', 'modelClass', 'queryClass'], 'match', 'pattern' => '/^\w+$/', 'message' => 'Only word characters are allowed.'],
             [['ns', 'baseClass', 'queryNs', 'queryBaseClass'], 'match', 'pattern' => '/^[\w\\\\]+$/', 'message' => 'Only word characters and backslashes are allowed.'],
             [['tableName'], 'match', 'pattern' => '/^([\w ]+\.)?([\w\* ]+)$/', 'message' => 'Only word characters, and optionally spaces, an asterisk and/or a dot are allowed.'],
-            [['db'], 'validateDb'],
+            [['fkname'],'safe'],
+			[['db'], 'validateDb'],
             [['ns', 'queryNs'], 'validateNamespace'],
             [['tableName'], 'validateTableName'],
             [['modelClass'], 'validateModelClass', 'skipOnEmpty' => false],
@@ -104,6 +110,7 @@ class Generator extends \richkay\geesgii\Generator
             'queryClass' => 'ActiveQuery Class',
             'queryBaseClass' => 'ActiveQuery Base Class',
             'useSchemaName' => 'Use Schema Name',
+			'fkname'=>'ForeignKey',
         ]);
     }
 
@@ -143,6 +150,7 @@ class Generator extends \richkay\geesgii\Generator
                 the namespace part as it is specified in "ActiveQuery Namespace". You do not need to specify the class name
                 if "Table Name" ends with asterisk, in which case multiple ActiveQuery classes will be generated.',
             'queryBaseClass' => 'This is the base class of the new ActiveQuery class. It should be a fully qualified namespaced class name.',
+			
         ]);
     }
 
@@ -212,6 +220,7 @@ class Generator extends \richkay\geesgii\Generator
             $tableSchema = $db->getTableSchema($tableName);
             $params = [
                 'tableName' => $tableName,
+				'fkname' => $this->fkname,
                 'className' => $modelClassName,
                 'queryClassName' => $queryClassName,
                 'tableSchema' => $tableSchema,
@@ -223,6 +232,12 @@ class Generator extends \richkay\geesgii\Generator
                 Yii::getAlias('@' . str_replace('\\', '/', $this->ns)) . '/' . $modelClassName . '.php',
                 $this->render('model.php', $params)
             );
+			
+			if (isset($relations[$tableName])) {
+                $files[] = new CodeFile(
+                        Yii::getAlias('@' . str_replace('\\', '/', $this->ns)) . '/' . $modelClassName . '-extended.php', $this->render('model-extended.php', $params)
+                );
+            }
 
             // query :
             if ($queryClassName) {
@@ -436,7 +451,7 @@ class Generator extends \richkay\geesgii\Generator
     /**
      * @return array the generated relation declarations
      */
-    protected function generateRelations()
+    public function generateRelations()
     {
         if ($this->generateRelations === self::RELATIONS_NONE) {
             return [];
@@ -817,6 +832,36 @@ class Generator extends \richkay\geesgii\Generator
 
         return $this->classNames[$fullTableName] = Inflector::id2camel($schemaName.$className, '_');
     }
+	
+	
+	public function generateFkname($table){
+		$db = $this->getDbConnection();
+		$relations = [];
+		$tableSchema = $db->getTableSchema($table);
+
+		foreach ($tableSchema->foreignKeys as $refs) {
+            $refTable = $refs[0];
+			
+			unset($refs[0]);
+			$fks = array_keys($refs);
+            $refClassName = $this->generateClassName($refTable);
+			
+			$colomtarget =$db->getTableSchema($refTable);
+			foreach ($colomtarget->columns as $col){
+				$cols[$col->name]=$col->name;
+			}
+            // Add relation for this table
+            $link = $this->generateRelationLink(array_flip($refs));
+            $relationName = $this->generateRelationName($relations, $tableSchema, $fks[0], false);
+            $attribute['fkname'] = implode("', '", array_keys($refs));
+			$attribute['tablename'] =$refTable;
+			$attribute['classname']='app/../../'.$refClassName;
+			$attribute['targetname']=$cols;
+			$attributes[]=$attribute;
+        }
+		return $attributes;
+	}
+		
 
     /**
      * Generates a query class name from the specified model class name.

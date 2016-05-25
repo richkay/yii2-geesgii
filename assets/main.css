@@ -6,7 +6,11 @@ body {
 .page-container {
     min-height: 100%;
 }
-
+.navbar{
+	background-color:#888!important;
+	
+}
+.navbar-collapse{color :#FFF!important;}
 .content-container {
     padding-top: 70px;
 }
