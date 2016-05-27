@@ -14,12 +14,12 @@
             "email": "richkay71@gmail.com"
         }
     ],
-   
+    "minimum-stability": "dev",
     "require": {
         "yiisoft/yii2": ">=2.0.4",
         "yiisoft/yii2-bootstrap": "~2.0",
         "phpspec/php-diff": ">=1.0.2",
-        "bower-asset/typeahead.js": "0.10.* | ~0.11.0"
+        "bower-asset/typeahead.js": "0.10.* | ~0.11.0",
 		"mdmsoft/yii2-format-converter":"*",
 		"mdmsoft/yii2-autonumber":"*",
 		"kartik-v/yii2-grid": "^3.0.4",
