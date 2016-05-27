@@ -16,7 +16,7 @@ use yii\db\TableSchema;
 use richkay\geesgii\CodeFile;
 use yii\helpers\Inflector;
 use yii\base\NotSupportedException;
-
+use richkay\geesgii\models\DevRecord;
 /**
  * This generator will generate one or multiple ActiveRecord classes for the specified database table.
  *
@@ -34,7 +34,7 @@ class Generator extends \richkay\geesgii\Generator
     public $tableName;
     public $modelClass;
     public $baseClass = 'yii\db\ActiveRecord';
-    public $generateRelations = self::RELATIONS_ALL;
+    public $generateRelations = self::RELATIONS_NONE;
     public $generateLabelsFromComments = false;
     public $useTablePrefix = false;
     public $useSchemaName = true;
@@ -205,20 +205,132 @@ class Generator extends \richkay\geesgii\Generator
         }
     }
 
+	public function getGeesModelExPath()
+    {
+        if ($this->ns=='app\models') {
+            return Yii::getAlias('@app/models/');
+        } else {
+            return Yii::getAlias('@'.str_replace('\\', '/', ltrim($this->ns, '\\').'/'));
+        }
+    }
+	public function generateGeesBehavior(){
+		$dataFK=[];
+		
+		$behavior=[];
+		$dataFK=[$this->fkname];
+		//$behavior=$dataFK;
+		if ($dataFK !== null){
+			foreach($dataFK as $FKs){
+			  if ($FKs !== null){
+				foreach($FKs as $FK){
+					foreach($FK as $F){
+						$use=$F["isused"];
+						if ($use!=false){
+						$behavior[]=['behav'=>"'".$F['name']."name'=>['".strtolower($F['relationName'])."','".$F['targetname']."']",'used'=>$F['modellink']."\\".$F['modelclass']];	
+						}
+					}
+				}
+			  }
+			}
+		}else{return [];}
+		return $behavior;
+	}
+	public function generateGeesRelations(){
+		if ($this->generateRelations === self::RELATIONS_NONE) {
+            return [];
+        }
+		$dataFK[]=$this->fkname;
+		$relations=[];
+		//$behavior=$dataFK;
+		if ($dataFK!=null){
+			foreach($dataFK as $FKs){
+			  if ($FKs !== null){
+				foreach($FKs as $FK){
+					foreach($FK as $F){
+						$use=$F["isused"];
+						if ($use!=false){
+							$table=$F['fullname'];
+							$relationName=$F['relationName'];
+							$refClassName=$F['modelclass'];
+							$link=$F['link'];
+						$relations[$table][$relationName] = [
+							"return \$this->hasOne($refClassName::className(), $link);",
+							$refClassName,
+							false,
+						];
+						}
+					}
+				}
+			  }
+			}
+		}else{return [];}
+		return $relations;
+	}
+	
+	public function generateGeesFkname($table){
+		$db = $this->getDbConnection();
+		$relations = [];
+		$tableSchema = $db->getTableSchema($table);
+		$className = $this->generateClassName($tableSchema->fullName);
+		foreach ($tableSchema->foreignKeys as $refs) {
+            $refTable = $refs[0];
+			//$refTableSchema = $db->getTableSchema($refTable);
+                //if ($refTableSchema === null) {
+                        // Foreign key could point to non-existing table: https://github.com/yiisoft/yii2-gii/issues/34
+                 //       continue;
+                //}
+			unset($refs[0]);
+			$fks = array_keys($refs);
+            $refClassName = $this->generateClassName($refTable);
+			
+			
+            // Add relation for this table
+            $link = $this->generateRelationLink(array_flip($refs));
+            $relationName = $this->generateRelationName($relations, $tableSchema, $fks[0], false);
+            $attribute['fkname'] = implode("', '", array_keys($refs));
+			$attribute['tablename'] =$refTable;
+			$attribute['classname']=$refClassName;
+			$attribute['targetname']=$this->getCol($refTable);
+			$attribute['relationName']=$relationName;
+			$attribute['link']=$link;
+			$attribute['class_ns']=$this->getClassLink();
+			$attribute['fullname']=$tableSchema->fullName;
+			$attributes[]=$attribute;
+        }
+		return $attributes;
+	}
+	public function getCol($refTable){
+		$db = $this->getDbConnection();
+		$colomtarget =$db->getTableSchema($refTable);
+		foreach ($colomtarget->columns as $col){
+			$cols[$col->name]=$col->name;	
+		}
+		return $cols;
+	}
+	public function getClassLink(){
+		$data = DevRecord::find()->where(['type_class'=>'M'])->all();
+		foreach ($data as $col){
+			$cols[$col->ns]=$col->ns;	
+		}
+		return $cols;
+	}
+	
     /**
      * @inheritdoc
      */
     public function generate()
     {
         $files = [];
-        $relations = $this->generateRelations();
+        $relations = $this->generateGeesRelations();
         $db = $this->getDbConnection();
         foreach ($this->getTableNames() as $tableName) {
             // model :
+			
             $modelClassName = $this->generateClassName($tableName);
             $queryClassName = ($this->generateQuery) ? $this->generateQueryClassName($modelClassName) : false;
             $tableSchema = $db->getTableSchema($tableName);
             $params = [
+				'behavior' =>  $this->generateGeesBehavior(),
                 'tableName' => $tableName,
 				'fkname' => $this->fkname,
                 'className' => $modelClassName,
@@ -226,16 +338,18 @@ class Generator extends \richkay\geesgii\Generator
                 'tableSchema' => $tableSchema,
                 'labels' => $this->generateLabels($tableSchema),
                 'rules' => $this->generateRules($tableSchema),
-                'relations' => isset($relations[$tableName]) ? $relations[$tableName] : [],
+				'relations' =>isset($relations[$tableName]) ? $relations[$tableName] : [],
             ];
             $files[] = new CodeFile(
                 Yii::getAlias('@' . str_replace('\\', '/', $this->ns)) . '/' . $modelClassName . '.php',
                 $this->render('model.php', $params)
             );
-			
-			if (isset($relations[$tableName])) {
-                $files[] = new CodeFile(
-                        Yii::getAlias('@' . str_replace('\\', '/', $this->ns)) . '/' . $modelClassName . '-extended.php', $this->render('model-extended.php', $params)
+			$extendPath =$this->getGeesModelExPath();
+			if ($this->generateRelations!==self::RELATIONS_NONE) {
+				$extendfile =Yii::getAlias($modelClassName . '-extended.php');
+				//$extendfile = Yii::getAlias('@' . str_replace('\\', '/', $this->ns) . '/' . $modelClassName . '-extended.php');
+                $files[] = new CodeFile($extendPath.'extend/'.$extendfile
+                        , $this->render('model-extended.php', $params)
                 );
             }
 
@@ -243,10 +357,14 @@ class Generator extends \richkay\geesgii\Generator
             if ($queryClassName) {
                 $params['className'] = $queryClassName;
                 $params['modelClassName'] = $modelClassName;
-                $files[] = new CodeFile(
-                    Yii::getAlias('@' . str_replace('\\', '/', $this->queryNs)) . '/' . $queryClassName . '.php',
-                    $this->render('query.php', $params)
+				$extendfile =Yii::getAlias($queryClassName. '.php');
+				$files[] = new CodeFile($extendPath.'query/'.$extendfile
+                        , $this->render('query.php', $params)
                 );
+                //$files[] = new CodeFile(
+                   // Yii::getAlias('@' . str_replace('\\', '/', $this->queryNs)) . '/' . $queryClassName . '.php',
+                  //  $this->render('query.php', $params)
+                //);
             }
         }
 
@@ -482,9 +600,7 @@ class Generator extends \richkay\geesgii\Generator
                         $refClassName,
                         false,
                     ];
-
-                    // Add relation for the referenced table
-                    $hasMany = $this->isHasManyRelation($table, $fks);
+                   $hasMany = $this->isHasManyRelation($table, $fks);
                     $link = $this->generateRelationLink($refs);
                     $relationName = $this->generateRelationName($relations, $refTableSchema, $className, $hasMany);
                     $relations[$refTableSchema->fullName][$relationName] = [
@@ -494,16 +610,16 @@ class Generator extends \richkay\geesgii\Generator
                     ];
                 }
 
-                if (($junctionFks = $this->checkJunctionTable($table)) === false) {
-                    continue;
-                }
+               if (($junctionFks = $this->checkJunctionTable($table)) === false) {
+                   continue;
+               }
 
                 $relations = $this->generateManyManyRelations($table, $junctionFks, $relations);
             }
         }
 
         if ($this->generateRelations === self::RELATIONS_ALL_INVERSE) {
-            return $this->addInverseRelations($relations);
+           return $this->addInverseRelations($relations);
         }
 
         return $relations;
@@ -834,33 +950,7 @@ class Generator extends \richkay\geesgii\Generator
     }
 	
 	
-	public function generateFkname($table){
-		$db = $this->getDbConnection();
-		$relations = [];
-		$tableSchema = $db->getTableSchema($table);
-
-		foreach ($tableSchema->foreignKeys as $refs) {
-            $refTable = $refs[0];
-			
-			unset($refs[0]);
-			$fks = array_keys($refs);
-            $refClassName = $this->generateClassName($refTable);
-			
-			$colomtarget =$db->getTableSchema($refTable);
-			foreach ($colomtarget->columns as $col){
-				$cols[$col->name]=$col->name;
-			}
-            // Add relation for this table
-            $link = $this->generateRelationLink(array_flip($refs));
-            $relationName = $this->generateRelationName($relations, $tableSchema, $fks[0], false);
-            $attribute['fkname'] = implode("', '", array_keys($refs));
-			$attribute['tablename'] =$refTable;
-			$attribute['classname']='app/../../'.$refClassName;
-			$attribute['targetname']=$cols;
-			$attributes[]=$attribute;
-        }
-		return $attributes;
-	}
+	
 		
 
     /**

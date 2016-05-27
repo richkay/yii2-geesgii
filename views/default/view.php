@@ -20,7 +20,49 @@ foreach ($generator->templates as $name => $path) {
     $templates[$name] = "$name ($path)";
 }
 ?>
+<?php
+
+$sss =<<<JS
+$(document).on('click', '#generate', function(e){
+	var generatorns = $('#generator-ns').val(),
+		generatortablename = $('#generator-tablename').val(),
+		generatormodelclass = $('#generator-modelclass').val();
+		generatorgeneraterelations =$('#generator-generaterelations').val();
+	var values = {
+            'DevRecord[tabel_name]':generatortablename,
+			'DevRecord[ns]':generatorns,
+			'DevRecord[class_name]':generatormodelclass,
+			'DevRecord[type_class]':'M',
+			'DevRecord[has_realation]':generatorgeneraterelations,
+			'_csrf': yii.getCsrfToken(),
+    };
+	var link =baseUrl+'/geesgii/dev-record/save';
+	$.ajax({
+				type: "POST",
+				data: values,
+				async: true,
+				dataType: 'json',
+				enctype: 'multipart/form-data',
+				cache: false,
+				url:link,
+				success: function(data){				
+					setTimeout(function(){
+						alert(data);
+					}, 100);
+				},
+				error:function (xhr, ajaxOptions, thrownError){
+					alert(xhr.status);
+					alert(xhr.statusText);
+					alert(xhr.responseText);
+				}
+			});
+});
+
+JS;
+$this->registerJs($sss, \yii\web\View::POS_END);
+?>
 <div class="default-view">
+
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p><?= $generator->getDescription() ?></p>
@@ -50,10 +92,10 @@ foreach ($generator->templates as $name => $path) {
 							echo '<strong>Fk Name</strong>';
 							echo '</div>';
 							echo '<div class="col-lg-3 col-md-3 form-group">';
-							echo '<strong>Table Target</strong>';
+							echo '<strong>Model Class Name</strong>';
 							echo '</div>';
 							echo '<div class="col-lg-4 col-md-4 form-group">';
-							echo '<strong>Model Class</strong>';
+							echo '<strong>Model Class Link</strong>';
 							echo '</div>';
 							echo '<div class="col-lg-2 col-md-2 form-group">';
 							echo '<strong>Target Value</strong>';
@@ -61,36 +103,35 @@ foreach ($generator->templates as $name => $path) {
 							echo '<div class="col-lg-1 col-md-1 form-group">';
 							echo '<strong>Use?</strong>';
 							echo '</div>';
+							echo '<div class="previ">Preview to Get Relation Filed</div>';
 							$relations = $generator->generateRelations();
-							$tableName=$generator->tableName;
+							$tableName=$generator->tableName;	
 							if (isset($relations[$tableName])) {
-								//echo 'Have Relation';
-								$dataFK=$generator->generateFkname($tableName);
-								//var_dump($dataFK);
-								
+								$dataFK=$generator->generateGeesFkname($tableName);
 								$i=0;
 								foreach($dataFK as $FK){
-									//echo $FK.'<br/>';
-									//var_dump($FK['targetname']);
+									echo $form->field($generator, 'fkname[fk]['.$i.'][link]')->hiddenInput(['value'=>$FK['link']])->label(false);
+									echo $form->field($generator, 'fkname[fk]['.$i.'][fullname]')->hiddenInput(['value'=>$FK['fullname']])->label(false);
+									echo $form->field($generator, 'fkname[fk]['.$i.'][relationName]')->hiddenInput(['value'=>$FK['relationName']])->label(false);
 									echo '<div class="col-lg-2 col-md-2  form-group sticky">';
-									echo $form->field($generator, 'fkname[fk]['.$i.']')->textInput(['placeholder'=>'fk','value'=>$FK['fkname']])->label(false);
+									echo $form->field($generator, 'fkname[fk]['.$i.'][name]')->textInput(['placeholder'=>'fk','value'=>$FK['fkname']])->label(false);
 									echo '</div>';
 									echo '<div class="col-lg-3 col-md-3 form-group">';
-									echo $form->field($generator, 'fkname[targettable]['.$i.']')->textInput(['value'=>$FK['tablename'],'placeholder'=>'target table'])->label(false);
+									echo $form->field($generator, 'fkname[fk]['.$i.'][modelclass]')->textInput(['placeholder'=>$FK['classname']])->label(false);
 									echo '</div>';
 									echo '<div class="col-lg-4 col-md-4 form-group">';
-									echo $form->field($generator, 'fkname[modelclass]['.$i.']')->textInput(['value'=>$FK['classname'],'placeholder'=>'model class'])->label(false);
+									echo $form->field($generator, 'fkname[fk]['.$i.'][modellink]')->dropDownList($FK['class_ns'])->label(false);
 									echo '</div>';
 									echo '<div class="col-lg-2 col-md-2 form-group">';
-									echo $form->field($generator, 'fkname[targetname]['.$i.']')->dropDownList($FK['targetname'])->label(false);
+									echo $form->field($generator, 'fkname[fk]['.$i.'][targetname]')->dropDownList($FK['targetname'])->label(false);
 									echo '</div>';
 									echo '<div class="col-lg-1 col-md-1 form-group">';
-									echo $form->field($generator, 'fkname[isused]['.$i.']')->checkbox(['label' => null]);
+									echo $form->field($generator, 'fkname[fk]['.$i.'][isused]')->checkbox(['label' => null]);
 									echo '</div>';
 									$i++;
 								}
 							}else{
-								echo 'NONE - Relation';
+								echo '';
 							}
 					?>
 					</div>
@@ -101,7 +142,7 @@ foreach ($generator->templates as $name => $path) {
                     <?= Html::submitButton('Preview', ['name' => 'preview', 'class' => 'btn btn-primary']) ?>
 
                     <?php if (isset($files)): ?>
-                        <?= Html::submitButton('Generate', ['name' => 'generate', 'class' => 'btn btn-success']) ?>
+                        <?= Html::submitButton('Generate', ['id'=>'generate','name' => 'generate', 'class' => 'btn btn-success']) ?>
                     <?php endif; ?>
                 </div>
             </div>
@@ -125,3 +166,16 @@ foreach ($generator->templates as $name => $path) {
         ?>
     <?php ActiveForm::end(); ?>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+

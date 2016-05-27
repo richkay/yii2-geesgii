@@ -89,6 +89,9 @@ class geesgii extends \yii\base\Module implements BootstrapInterface
         return [
             'model' => ['class' => 'richkay\geesgii\generators\model\Generator'],
             'crud' => ['class' => 'richkay\geesgii\generators\crud\Generator'],
+			'controller' => ['class' => 'richkay\geesgii\generators\controller\Generator'],
+			'migration'=>['class' => 'richkay\geesgii\generators\migration\Generator'],
+			'module'=>['class' => 'richkay\geesgii\generators\module\Generator'],
         ];
     }
 }

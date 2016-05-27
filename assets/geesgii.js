@@ -220,6 +220,18 @@ yii.gii = (function ($) {
                 }
 				
             });
+			$('#model-generator #modellink').on('blur', function () {
+                var link = $(this).val();
+                var linkPrefix = $(this).attr('link_prefix') || '';
+				
+                if (linkPrefix.length) {
+                    // if starts with prefix
+                    if (link.slice(0, linkPrefix.length) === linkPrefix) {
+                        // remove prefix
+                        linkName = linkName.slice(linkPrefix.length);
+                    }
+                }
+            });
 
             // model generator: translate model class to query class
             $('#model-generator #generator-modelclass').on('blur', function () {

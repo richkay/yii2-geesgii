@@ -1,10 +1,4 @@
 <?php
-/**
- * @link http://www.yiiframework.com/
- * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
- */
-
 namespace richkay\geesgii\generators\crud;
 
 use Yii;
@@ -15,7 +9,6 @@ use richkay\geesgii\CodeFile;
 use yii\helpers\Inflector;
 use yii\helpers\VarDumper;
 use yii\web\Controller;
-
 /**
  * Generates CRUD
  *
@@ -26,8 +19,8 @@ use yii\web\Controller;
  * @property boolean|\yii\db\TableSchema $tableSchema This property is read-only.
  * @property string $viewPath The controller view path. This property is read-only.
  *
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
+ * @author Rich Kay <richfein71@gmail.com>
+ * @since 1.0
  */
 class Generator extends \richkay\geesgii\Generator
 {
@@ -35,25 +28,18 @@ class Generator extends \richkay\geesgii\Generator
     public $controllerClass;
     public $viewPath;
     public $baseControllerClass = 'yii\web\Controller';
-    public $indexWidgetType = 'grid';
     public $searchModelClass = '';
-    /**
-     * @var boolean whether to wrap the `GridView` or `ListView` widget with the `yii\widgets\Pjax` widget
-     * @since 2.0.5
-     */
-    public $enablePjax = false;
 
-	public function getId()
-    {
-        return 'crud';
-		//dont change this
-    }
     /**
      * @inheritdoc
      */
+	public function getId()
+    {
+        return 'AjaxCRUD';
+    }
     public function getName()
     {
-        return 'Gees CRUD Generator';
+        return 'Gees Ajax CRUD Generator';
     }
 
     /**
@@ -62,7 +48,7 @@ class Generator extends \richkay\geesgii\Generator
     public function getDescription()
     {
         return 'This generator generates a controller and views that implement CRUD (Create, Read, Update, Delete)
-            operations for the specified data model.';
+            operations for the specified data model with template for Single Page Ajax Administration';
     }
 
     /**
@@ -72,7 +58,7 @@ class Generator extends \richkay\geesgii\Generator
     {
         return array_merge(parent::rules(), [
             [['controllerClass', 'modelClass', 'searchModelClass', 'baseControllerClass'], 'filter', 'filter' => 'trim'],
-            [['modelClass', 'controllerClass', 'baseControllerClass', 'indexWidgetType'], 'required'],
+            [['modelClass', 'controllerClass', 'baseControllerClass'], 'required'],
             [['searchModelClass'], 'compare', 'compareAttribute' => 'modelClass', 'operator' => '!==', 'message' => 'Search Model Class must not be equal to Model Class.'],
             [['modelClass', 'controllerClass', 'baseControllerClass', 'searchModelClass'], 'match', 'pattern' => '/^[\w\\\\]*$/', 'message' => 'Only word characters and backslashes are allowed.'],
             [['modelClass'], 'validateClass', 'params' => ['extends' => BaseActiveRecord::className()]],
@@ -80,9 +66,8 @@ class Generator extends \richkay\geesgii\Generator
             [['controllerClass'], 'match', 'pattern' => '/Controller$/', 'message' => 'Controller class name must be suffixed with "Controller".'],
             [['controllerClass'], 'match', 'pattern' => '/(^|\\\\)[A-Z][^\\\\]+Controller$/', 'message' => 'Controller class name must start with an uppercase letter.'],
             [['controllerClass', 'searchModelClass'], 'validateNewClass'],
-            [['indexWidgetType'], 'in', 'range' => ['grid', 'list']],
             [['modelClass'], 'validateModelClass'],
-            [['enableI18N', 'enablePjax'], 'boolean'],
+            [['enableI18N'], 'boolean'],
             [['messageCategory'], 'validateMessageCategory', 'skipOnEmpty' => false],
             ['viewPath', 'safe'],
         ]);
@@ -98,11 +83,10 @@ class Generator extends \richkay\geesgii\Generator
             'controllerClass' => 'Controller Class',
             'viewPath' => 'View Path',
             'baseControllerClass' => 'Base Controller Class',
-            'indexWidgetType' => 'Widget Used in Index Page',
             'searchModelClass' => 'Search Model Class',
-            'enablePjax' => 'Enable Pjax',
         ]);
     }
+
 
     /**
      * @inheritdoc
@@ -112,7 +96,7 @@ class Generator extends \richkay\geesgii\Generator
         return array_merge(parent::hints(), [
             'modelClass' => 'This is the ActiveRecord class associated with the table that CRUD will be built upon.
                 You should provide a fully qualified class name, e.g., <code>app\models\Post</code>.',
-            'controllerClass' => 'This is the name of the controller class to be generated. You should
+             'controllerClass' => 'This is the name of the controller class to be generated. You should
                 provide a fully qualified namespaced class (e.g. <code>app\controllers\PostController</code>),
                 and class name should be in CamelCase with an uppercase first letter. Make sure the class
                 is using the same namespace as specified by your application\'s controllerNamespace property.',
@@ -121,13 +105,8 @@ class Generator extends \richkay\geesgii\Generator
                 to <code>@app/views/ControllerID</code>',
             'baseControllerClass' => 'This is the class that the new CRUD controller class will extend from.
                 You should provide a fully qualified class name, e.g., <code>yii\web\Controller</code>.',
-            'indexWidgetType' => 'This is the widget type to be used in the index page to display list of the models.
-                You may choose either <code>GridView</code> or <code>ListView</code>',
             'searchModelClass' => 'This is the name of the search model class to be generated. You should provide a fully
                 qualified namespaced class name, e.g., <code>app\models\PostSearch</code>.',
-            'enablePjax' => 'This indicates whether the generator should wrap the <code>GridView</code> or <code>ListView</code>
-                widget on the index page with <code>yii\widgets\Pjax</code> widget. Set this to <code>true</code> if you want to get
-                sorting, filtering and pagination without page refreshing.',
         ]);
     }
 
@@ -144,7 +123,7 @@ class Generator extends \richkay\geesgii\Generator
      */
     public function stickyAttributes()
     {
-        return array_merge(parent::stickyAttributes(), ['baseControllerClass', 'indexWidgetType']);
+        return array_merge(parent::stickyAttributes(), ['baseControllerClass']);
     }
 
     /**
@@ -152,7 +131,7 @@ class Generator extends \richkay\geesgii\Generator
      */
     public function validateModelClass()
     {
-        /* @var $class ActiveRecord */
+        /* @var $class ActiveRecord */     
         $class = $this->modelClass;
         $pk = $class::primaryKey();
         if (empty($pk)) {
@@ -166,7 +145,6 @@ class Generator extends \richkay\geesgii\Generator
     public function generate()
     {
         $controllerFile = Yii::getAlias('@' . str_replace('\\', '/', ltrim($this->controllerClass, '\\')) . '.php');
-
         $files = [
             new CodeFile($controllerFile, $this->render('controller.php')),
         ];
@@ -225,6 +203,22 @@ class Generator extends \richkay\geesgii\Generator
         $pk = $class::primaryKey();
 
         return $pk[0];
+    }
+	
+	public function generateRelationsSearch()
+    {
+        $tableSchema = $this->getTableSchema();
+		foreach ($tableSchema->foreignKeys as $refs) {
+			$refTable = $refs[0];
+
+            unset($refs[0]);
+			$fks = array_keys($refs);
+            $attributes = implode("', '", array_keys($refs));
+			$behavior[]="$"."dataProvider->sort->attributes['".$attributes."name']=[".
+						"'asc' => ['".$attributes."name'=>SORT_ASC],".
+						"'desc' => ['".$attributes."name'=>SORT_DESC]]";
+		}
+		return $behavior;
     }
 
     /**
@@ -349,7 +343,20 @@ class Generator extends \richkay\geesgii\Generator
         foreach ($types as $type => $columns) {
             $rules[] = "[['" . implode("', '", $columns) . "'], '$type']";
         }
+		
+		$tableSchema = $this->getTableSchema();
+		
+		foreach ($tableSchema->foreignKeys as $refs) {
+			$refTable = $refs[0];
 
+            unset($refs[0]);
+			$fks = array_keys($refs);
+            $attribute= implode("', '", array_keys($refs));
+			$attributes[]=$attribute."name";
+			
+		}
+		$rules[]="[['" . implode("', '", $attributes) . "'], 'safe']";
+		
         return $rules;
     }
 
@@ -536,6 +543,19 @@ class Generator extends \richkay\geesgii\Generator
         }
     }
 
+	public function getRelationColumnNames()
+    {
+		$tableSchema = $this->getTableSchema();
+		foreach ($tableSchema->foreignKeys as $refs) {
+			$refTable = $refs[0];
+
+            unset($refs[0]);
+			$fks = array_keys($refs);
+            $attribute = implode("', '", array_keys($refs));
+			$attributes[]=$attribute."name";
+		}
+		return $attributes;
+	}
     /**
      * @return array model column names
      */

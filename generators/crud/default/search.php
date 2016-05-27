@@ -18,6 +18,7 @@ $rules = $generator->generateSearchRules();
 $labels = $generator->generateSearchLabels();
 $searchAttributes = $generator->getSearchAttributes();
 $searchConditions = $generator->generateSearchConditions();
+$filterretation = $generator->generateRelationsSearch();
 
 echo "<?php\n";
 ?>
@@ -65,12 +66,13 @@ class <?= $searchModelClass ?> extends <?= isset($modelAlias) ? $modelAlias : $m
     {
         $query = <?= isset($modelAlias) ? $modelAlias : $modelClass ?>::find();
 
-        // add conditions that should always apply here
-
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
-
+		
+		
+		<?= implode(";\n            ",$filterretation) ?>;
+		
         $this->load($params);
 
         if (!$this->validate()) {
@@ -79,7 +81,6 @@ class <?= $searchModelClass ?> extends <?= isset($modelAlias) ? $modelAlias : $m
             return $dataProvider;
         }
 
-        // grid filtering conditions
         <?= implode("\n        ", $searchConditions) ?>
 
         return $dataProvider;

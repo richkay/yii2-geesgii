@@ -24,5 +24,18 @@ class GiiAsset extends AssetBundle
         'yii\bootstrap\BootstrapAsset',
         'yii\bootstrap\BootstrapPluginAsset',
         'richkay\geesgii\TypeAheadAsset',
+		'kartik\grid\GridViewAsset',
     ];
+	public function init() {
+       // In dev mode use non-minified javascripts
+       $this->js = YII_DEBUG ? [
+           'ModalRemote.js',
+           'geesgiicrud.js',
+       ]:[
+           'ModalRemote.min.js',
+           'geesgiicrud.min.js',
+       ];
+
+       parent::init();
+   }
 }

@@ -38,3 +38,47 @@ use richkay\geesgii\generators\model\Generator;
 	</div>
  </div>
 </div>
+
+<?php
+$sss =<<<JS
+$(document).on('change', '#generator-generaterelations', function(e)
+{
+	var generatorgeneraterelations =$('#generator-generaterelations').val();
+	var generatortablename=$('#generator-tablename').val();
+	var generatortablename=$('#generator-tablename').val();
+	if (generatorgeneraterelations!='none'){
+		if (generatortablename!=''){
+			$('.relation').show();
+		}else{
+			$('.relation').hide();
+		}
+	}else{
+		$('.relation').hide();
+	}
+});
+$(document).on('blur', '#generator-tablename', function(e)
+{
+	var generatortablename=$('#generator-tablename').val();
+	var generatorgeneraterelations =$('#generator-generaterelations').val();
+	if (generatortablename!=''){
+		if (generatorgeneraterelations!='none'){
+		$('.relation').show();
+		}else{
+			$('.relation').hide();
+		}
+	}else{
+		$('.relation').hide();
+	}
+});
+JS;
+$this->registerJs($sss, \yii\web\View::POS_END);
+?>
+
+
+
+
+
+
+
+
+

@@ -19,21 +19,16 @@ echo "<?php\n";
 namespace <?= $generator->ns ?>;
 
 use Yii;
-
+<?php if ($queryClassName): ?>
+use <?= $generator->queryNs.'\query\\'.$queryClassName ?>;
+<?php endif; ?>
 /**
  * This is the model class for table "<?= $generator->generateTableName($tableName) ?>".
  *
 <?php foreach ($tableSchema->columns as $column): ?>
  * @property <?= "{$column->phpType} \${$column->name}\n" ?>
 <?php endforeach; ?>
-<?php if (!empty($relations)): ?>
- *
-<?php foreach ($relations as $name => $relation): ?>
- * @property <?= $relation[1] . ($relation[2] ? '[]' : '') . ' $' . lcfirst($name) . "\n" ?>
-<?php endforeach; ?>
-<?php endif; ?>
-
- */
+**/
 class <?= $className ?> extends <?= '\\' . ltrim($generator->baseClass, '\\') . "\n" ?>
 {
     /**

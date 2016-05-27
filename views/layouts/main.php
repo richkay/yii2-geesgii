@@ -17,6 +17,10 @@ $asset = richkay\geesgii\GiiAsset::register($this);
     <?= Html::csrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
+	<script type="text/javascript">
+		var baseUrl = "<?= Yii::$app->getUrlManager()->getBaseUrl() ?>";
+	</script>
+	
 </head>
 <body>
     <div class="container-fluid page-container">
