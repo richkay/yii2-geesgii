@@ -5,7 +5,7 @@
 
 Once the extension is installed. Prepare required table by execute yii migrate.
 ```
-yii migrate --migrationPath=@mdm/upload/migrations
+yii migrate --migrationPath=@richkay/geesgii/migrations
 ```
 
 ```
