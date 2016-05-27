@@ -1,6 +1,8 @@
 # Gees Gii
-SetUP
-
+=============
+```
+**SetUP**
+-------------
 'modules' => [
         ....
 		'gridview' =>  [
@@ -8,9 +10,12 @@ SetUP
 		],
 		.....
 ],
-
-/** Gii Setup **/
-$config['bootstrap'][] = 'geesgii';
+```
+```
+**Gii Setup** 
+-----------------
+$config['bootstrap'][] = 'geesgii';<br/>
     $config['modules']['geesgii'] = [
         'class' => 'richkay\geesgii\Geesgii',
 ];
+```
