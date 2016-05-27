@@ -14,7 +14,7 @@
             "email": "richkay71@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
+   
     "require": {
         "yiisoft/yii2": ">=2.0.4",
         "yiisoft/yii2-bootstrap": "~2.0",
